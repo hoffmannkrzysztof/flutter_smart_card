@@ -1,0 +1,29 @@
+name: flutter_smart_card
+description: A Flutter plugin for communicating with smart card readers via USB. Supports Android (USB CCID), macOS (CryptoTokenKit), and Windows (WinSCard).
+version: 0.1.0
+repository: https://github.com/tachovis/flutter_smart_card
+
+environment:
+  sdk: ^3.10.4
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: eu.tachovis.flutter_smart_card
+        pluginClass: FlutterSmartCardPlugin
+      macos:
+        pluginClass: FlutterSmartCardPlugin
+      windows:
+        pluginClass: FlutterSmartCardPluginCApi
