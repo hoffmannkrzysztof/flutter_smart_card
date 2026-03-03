@@ -1,0 +1,31 @@
+example/lib/main.dart
+  9fbf79a528581e27 1,4,8,52-56,162-163,509-571,815-821,879-963
+example/pubspec.yaml
+  9fbf79a528581e27 28-29
+example/lib/tachograph_card_reader.dart
+  9fbf79a528581e27 1-299
+example/macos/Runner/Release.entitlements
+  9fbf79a528581e27 9-10
+example/macos/Runner/DebugProfile.entitlements
+  9fbf79a528581e27 13-14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "9a513e116c75813ae4ae6c0bc19cbba9375acc1a",
+  "prompts": {
+    "9fbf79a528581e27": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "19d878d0-0774-44eb-bf08-e067321d5aa4",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Krzysztof Hoffmann <krzysiekpl@gmail.com>",
+      "messages": [],
+      "total_additions": 497,
+      "total_deletions": 26,
+      "accepted_lines": 471,
+      "overriden_lines": 0
+    }
+  }
+}
