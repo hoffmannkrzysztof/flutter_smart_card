@@ -1,0 +1,25 @@
+CHANGELOG.md
+  3c7d33204b1c5dc1 1-8
+README.md
+  3c7d33204b1c5dc1 10,83-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.7",
+  "base_commit_sha": "59610246d8672e3c37406855b834d0256425c008",
+  "prompts": {
+    "3c7d33204b1c5dc1": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "926f9462-dafe-4a1e-8562-e2262e6a1632",
+        "model": "claude-4.6-sonnet-medium-thinking"
+      },
+      "human_author": "Krzysztof Hoffmann <krzysiekpl@gmail.com>",
+      "messages": [],
+      "total_additions": 47,
+      "total_deletions": 1,
+      "accepted_lines": 47,
+      "overriden_lines": 0
+    }
+  }
+}
