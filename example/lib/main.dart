@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_card/flutter_smart_card.dart';
+
+import 'tachograph_card_reader.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,6 +48,11 @@ class _SmartCardPageState extends State<SmartCardPage> {
   String? _cardNumber;
   String? _expiryDate;
   String? _applicationLabel;
+
+  // Tachograph card info
+  DriverInfo? _driverInfo;
+  Uint8List? _dddData;
+  String? _tachographProgress;
 
   void _addLog(String message) {
     setState(() {
@@ -150,6 +159,8 @@ class _SmartCardPageState extends State<SmartCardPage> {
         _cardNumber = null;
         _expiryDate = null;
         _applicationLabel = null;
+        _driverInfo = null;
+        _dddData = null;
       });
       _addLog('Disconnected');
     } catch (e) {
@@ -495,6 +506,69 @@ class _SmartCardPageState extends State<SmartCardPage> {
     }
   }
 
+  Future<void> _readTachographCard() async {
+    if (!_isConnected) return;
+    setState(() {
+      _isBusy = true;
+      _driverInfo = null;
+      _dddData = null;
+      _tachographProgress = null;
+    });
+
+    try {
+      _addLog('--- Reading Tachograph Card ---');
+
+      final reader = TachographCardReader(
+        _transmitApdu,
+        onProgress: (efName, current, total) {
+          setState(() => _tachographProgress = '$efName ($current/$total)');
+          _addLog('Reading $efName ($current/$total)...');
+        },
+      );
+
+      final (dddBytes, driverInfo) = await reader.read();
+
+      setState(() {
+        _dddData = dddBytes;
+        _driverInfo = driverInfo;
+        _tachographProgress = null;
+      });
+
+      _addLog('DDD file: ${dddBytes.length} bytes');
+      if (driverInfo.displayName.isNotEmpty) {
+        _addLog('Driver: ${driverInfo.displayName}');
+      }
+      if (driverInfo.cardNumber != null) {
+        _addLog('Card number: ${driverInfo.cardNumber}');
+      }
+      _addLog('--- Tachograph Done ---');
+    } catch (e) {
+      _addLog('Tachograph error: $e');
+    } finally {
+      setState(() {
+        _isBusy = false;
+        _tachographProgress = null;
+      });
+    }
+  }
+
+  Future<void> _saveDdd() async {
+    if (_dddData == null) return;
+    try {
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save DDD file',
+        fileName: 'card.ddd',
+        type: FileType.any,
+      );
+      if (result != null) {
+        await File(result).writeAsBytes(_dddData!);
+        _addLog('DDD saved to $result');
+      }
+    } catch (e) {
+      _addLog('Save error: $e');
+    }
+  }
+
   /// Calculate total PDOL data length from PDOL tag list
   int _calculatePdolLength(Uint8List pdol) {
     int total = 0;
@@ -738,6 +812,13 @@ class _SmartCardPageState extends State<SmartCardPage> {
                           icon: const Icon(Icons.credit_card),
                           label: const Text('Read Card'),
                         ),
+                        FilledButton.icon(
+                          onPressed: _isBusy || !_isConnected
+                              ? null
+                              : _readTachographCard,
+                          icon: const Icon(Icons.speed),
+                          label: const Text('Read Tachograph'),
+                        ),
                       ],
                     ),
                   ],
@@ -791,6 +872,91 @@ class _SmartCardPageState extends State<SmartCardPage> {
                             ),
                         ],
                       ),
+                    ],
+                  ),
+                ),
+              ),
+            // Tachograph progress
+            if (_tachographProgress != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(child: Text(_tachographProgress!)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            // Tachograph card info
+            if (_driverInfo != null)
+              Card(
+                color: Theme.of(context).colorScheme.tertiaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Tachograph Driver Card',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onTertiaryContainer,
+                            ),
+                      ),
+                      if (_driverInfo!.displayName.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _driverInfo!.displayName,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onTertiaryContainer,
+                              ),
+                        ),
+                      ],
+                      if (_driverInfo!.cardNumber != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _driverInfo!.cardNumber!,
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
+                          ),
+                        ),
+                      ],
+                      if (_driverInfo!.birthDate != null)
+                        Text(
+                          'Born: ${_driverInfo!.birthDate}',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
+                          ),
+                        ),
+                      if (_dddData != null) ...[
+                        const SizedBox(height: 8),
+                        FilledButton.tonalIcon(
+                          onPressed: _saveDdd,
+                          icon: const Icon(Icons.save),
+                          label: Text('Save DDD (${_dddData!.length} bytes)'),
+                        ),
+                      ],
                     ],
                   ),
                 ),
