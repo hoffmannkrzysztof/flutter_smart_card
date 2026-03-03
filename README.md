@@ -7,6 +7,7 @@ A Flutter plugin for communicating with smart card readers via USB. Supports And
 - **List readers** - Discover connected smart card readers
 - **Connect/Disconnect** - Establish and close sessions with smart cards
 - **Transmit APDU** - Send and receive raw APDU commands
+- **Tachograph DDD extraction** - Read and export DDD files from EU tachograph driver cards (G1 and G2)
 
 ## Platform Support
 
@@ -77,6 +78,44 @@ if (readers.isNotEmpty) {
   // Disconnect
   await smartCard.disconnect();
 }
+```
+
+## Tachograph Driver Card (DDD) Extraction
+
+The example app includes `TachographCardReader`, a helper class that reads EU tachograph driver cards and produces a standards-compliant DDD byte buffer.
+
+### What it does
+
+- Reads MF-level EFs (`EF_ICC`, `EF_IC`, `EF_DIR`, etc.)
+- Reads the G1 DF (AID `TACHO`) including all activity, events, faults, and identification files
+- Reads the G2 DF (AID `SMRDT`) with extended G2 EFs including GNSS places and vehicle units
+- Captures RSA (G1) and ECDSA (G2) signatures for each signed EF
+- Assembles the data into a DDD-format byte buffer (tag + type + length + data blocks)
+- Parses `EF_Identification` to extract driver info: name, birth date, card number, country code, and issuing authority
+
+### Example usage
+
+```dart
+import 'package:flutter_smart_card/flutter_smart_card.dart';
+import 'tachograph_card_reader.dart';
+
+final smartCard = FlutterSmartCard();
+await smartCard.connect(readerName);
+
+final reader = TachographCardReader(
+  (apdu) => smartCard.transmit(Uint8List.fromList(apdu)),
+  onProgress: (efName, current, total) {
+    print('Reading $efName ($current/$total)');
+  },
+);
+
+final (dddBytes, driverInfo) = await reader.read();
+
+print('Driver: ${driverInfo.displayName}');
+print('Card number: ${driverInfo.cardNumber}');
+// Save dddBytes to a .ddd file
+
+await smartCard.disconnect();
 ```
 
 ## API Reference

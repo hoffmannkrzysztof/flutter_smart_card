@@ -940,6 +940,18 @@ class _SmartCardPageState extends State<SmartCardPage> {
                           ),
                         ),
                       ],
+                      if (_driverInfo!.countryCode != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          "Country: ${_driverInfo!.countryCode}",
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onTertiaryContainer,
+                          ),
+                        ),
+                      ],
                       if (_driverInfo!.birthDate != null)
                         Text(
                           'Born: ${_driverInfo!.birthDate}',
