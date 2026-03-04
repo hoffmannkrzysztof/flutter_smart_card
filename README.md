@@ -23,7 +23,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  flutter_smart_card: ^0.1.0
+  flutter_smart_card: ^0.2.0
 ```
 
 ## Platform Setup
